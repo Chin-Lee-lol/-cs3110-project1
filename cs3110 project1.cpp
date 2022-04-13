@@ -6,11 +6,98 @@
 #include <math.h>
 
 using namespace std;
+string LetterCheck(string input, char check, int size)
+{
+    int a = input.find(check);
+    if (a != -1)
+    {
+        cout << "Decimal number cannot contain " << check << " letter\n";
+        return "";
+    }
+    return input;
+}
+string FloatTypeSuffixChecker(string input, char check, int size)
+{
+    int f = input.find(check); // simply remove f F d D from the string
+    if (f != -1)
+        if (f == size - 1) // if f is last char, then cool
+            input.erase(f, 1);
+        else
+        {
+            cout << "\nThe " << check << " notation in wrong location\n";
+            return ""; // wrong notation
+        }
+    f = input.find(check); // simply remove f F d D from the string
+    if (f != -1)
+    {
+        cout << "\nThere are multiple " << check << " notation in the string\n";
+        return "";
+    }
+    return input; // cool
+}
+
+float StringToFloat(string input, bool hex)
+{
+    float sum = 0; bool period = false;
+    int dot = input.find('.');
+    if (dot != -1) // deal with .
+    {
+        input.erase(dot, 1);
+        period = true;
+    }
+    int dotpos = dot;
+    dot = input.find('.');
+    if (dot != -1) // if theres one more . in string => nono
+    {
+        cout << "\nString contains more than one '.'\n";
+        return 0;
+    }
+    int n = input.size() - 1, temp; // to help calculate position
+    for (int i = 0; i < input.size(); i++)
+    {
+        switch (input.at(i)) // assign value corresponsively to the character
+        {
+        case 'f': case 'F':temp = 15; break;
+        case 'e': case 'E':temp = 14; break;
+        case 'd': case 'D':temp = 13; break;
+        case 'c': case 'C':temp = 12; break;
+        case 'b': case 'B':temp = 11; break;
+        case 'a': case 'A':temp = 10; break;
+        case '9': temp = 9; break;
+        case '8': temp = 8; break;
+        case '7': temp = 7; break;
+        case '6': temp = 6; break;
+        case '5': temp = 5; break;
+        case '4': temp = 4; break;
+        case '3': temp = 3; break;
+        case '2': temp = 2; break;
+        case '1': temp = 1; break;
+        case '0': temp = 0; break;
+        default: cout << "\nThe '" << input.at(i) << "' character is not valid\n";
+            return 0;
+        };
+        if (hex) // if it is hexadecimal multiply 16 for position else 10
+            sum += temp * pow(16, n);
+        else
+            sum += temp * pow(10, n);
+        n--;
+    }
+    if (period) // if theres dot, divide according to dot position
+        sum *= pow(10, -dotpos);
+    return sum;
+}
 
 float FPLConvertor(string input)
 {
     bool negative = false;
     float output = 0;
+    int n = input.length();
+    int underscore = input.find('_');
+    while (underscore != -1) // simply remove _ notation
+    {
+        input.erase(underscore, 1);
+        underscore = input.find('_');
+    }
     if (input.at(0) == '-') // check negative sign
     {
         negative = true;
@@ -19,48 +106,57 @@ float FPLConvertor(string input)
     if (input.substr(0, 2).compare("0x") == 0) //check if is hexadecimal
     {
         input.erase(0, 2); // remove 0x from the string
-        int n = input.size() - 1, temp; // to help calculate position
-        for (int i = 0; i < input.size(); i++)
-        {
-            switch (input.at(i)) // assign value corresponsively to the character
-            {
-            case 'f': temp = 15; break;
-            case 'e': temp = 14; break;
-            case 'd': temp = 13; break;
-            case 'c': temp = 12; break;
-            case 'b': temp = 11; break;
-            case 'a': temp = 10; break;
-            default: temp = stoi(input.substr(i, 1));
-            };
-            output += temp * pow(16, n); // multiply value with 16 power to the position
-            n--;
-        }
-        if (negative)
-            output *= -1;
-        return output;
+        output = StringToFloat(input, true);
     }
     else // it is not hexadecimal
     {
+        bool Echeck = false;
+        float power = 0;
+        input = FloatTypeSuffixChecker(input, 'f', n);
+        input = FloatTypeSuffixChecker(input, 'd', n);
+        input = FloatTypeSuffixChecker(input, 'D', n);
+        input = FloatTypeSuffixChecker(input, 'F', n);
+        input = LetterCheck(input, 'a', n);
+        input = LetterCheck(input, 'A', n);
+        input = LetterCheck(input, 'b', n);
+        input = LetterCheck(input, 'B', n);
+        input = LetterCheck(input, 'c', n);
+        input = LetterCheck(input, 'C', n);
+        if (input.compare("") == 0)
+            return 0;
+
         int e = input.find('e'), E = input.find('E'), index; // check if theres e/E notation in string
         if (e != -1 || E != -1)
         {
+            string exponent;
             if (e != -1)
                 index = e;
             else
                 index = E;
             input.erase(index, 1); // remove e/E notation
-            e = stoi(input.substr(index, input.size()-1)); // store integer after e/E
-            input.erase(index, input.size() - 1); // remove integer after e/E
-            output = stof(input) * pow(10,e);
-            if (negative)
-                output *= -1;
-            return output;
+            e = input.find('e');
+            E = input.find('E');
+            if (e != -1 || E != -1) // if theres more than 1 e/E => nono
+            {
+                cout << "\nThere are more than one e notation in the string\n";
+                return 0;
+            }
+            exponent = input.substr(index, input.size() - index); // store number after e/E in another string
+            input.erase(index, input.size() - index); // erase number in exponent part    
+            int dot = exponent.find('.');
+            if (dot != -1) // if theres a dot in exponential part => nono
+            {
+                cout << "\nThere is '.' in the exponential part\n";
+                return 0;
+            }
+            power = StringToFloat(exponent, false);
         }
-        output = stof(input);
-        if (negative)
-            output *= -1;
-        return output;
+        output = StringToFloat(input, false);
+        output = output * pow(10, power);
     }
+    if (negative)
+        output *= -1;
+    return output;
 }
 
 int main()
@@ -78,6 +174,5 @@ int main()
         cout << endl;
     }
     cout << "\nProgram terminated\n";
-    system("pause");
     return 0;
 }

@@ -11,7 +11,7 @@ string LetterCheck(string input, char check, int size)
     int a = input.find(check);
     if (a != -1)
     {
-        cout << "Decimal number cannot contain " << check << " letter\n";
+        cout << "\Decimal number cannot contain " << check << " letter\n";
         return "";
     }
     return input;
@@ -83,7 +83,7 @@ float StringToFloat(string input, bool hex)
         n--;
     }
     if (period) // if theres dot, divide according to dot position
-        sum *= pow(10, -dotpos);
+        sum /= pow(10, input.length() - dotpos);
     return sum;
 }
 
@@ -95,6 +95,18 @@ float FPLConvertor(string input)
     int underscore = input.find('_');
     while (underscore != -1) // simply remove _ notation
     {
+        if (underscore == 0 || underscore == input.length() - 1 ||input.at(underscore - 1) == ('.') || 
+            input.at(underscore - 1) == ('e') || input.at(underscore - 1) == ('E') || input.at(underscore - 1) == ('f') || 
+            input.at(underscore - 1) == ('F') || input.at(underscore - 1) == ('d') || input.at(underscore - 1) == ('D') || 
+            input.at(underscore - 1) == ('e') || input.at(underscore - 1) == ('+') || input.at(underscore - 1) == ('-') ||
+            input.at(underscore + 1) == ('.') || input.at(underscore + 1) == ('e') || input.at(underscore - 1) == ('E') ||
+            input.at(underscore + 1) == ('f') || input.at(underscore + 1) == ('F') || input.at(underscore + 1) == ('d') ||
+            input.at(underscore + 1) == ('D') || input.at(underscore + 1) == ('e') || input.at(underscore + 1) == ('+') ||
+            input.at(underscore + 1) == ('-') )
+        {
+            cout << "\nThe '_' is in invalid position\n";
+            return 0;
+        }
         input.erase(underscore, 1);
         underscore = input.find('_');
     }
@@ -111,6 +123,7 @@ float FPLConvertor(string input)
     else // it is not hexadecimal
     {
         bool Echeck = false;
+        bool Eneg = false;
         float power = 0;
         input = FloatTypeSuffixChecker(input, 'f', n);
         input = FloatTypeSuffixChecker(input, 'd', n);
@@ -134,6 +147,13 @@ float FPLConvertor(string input)
             else
                 index = E;
             input.erase(index, 1); // remove e/E notation
+            if (input.at(index) == '+')
+                input.erase(index, 1);
+            if (input.at(index) == '-')
+            {
+                input.erase(index, 1);
+                Eneg = true;
+            }
             e = input.find('e');
             E = input.find('E');
             if (e != -1 || E != -1) // if theres more than 1 e/E => nono
@@ -150,6 +170,8 @@ float FPLConvertor(string input)
                 return 0;
             }
             power = StringToFloat(exponent, false);
+            if (Eneg)
+                power *= -1;
         }
         output = StringToFloat(input, false);
         output = output * pow(10, power);

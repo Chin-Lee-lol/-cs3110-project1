@@ -1,17 +1,31 @@
-// cs3110 project1.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
+#ifndef Convertor_H
+#define Convertor_H
 #include <iostream>
 #include <string>
 #include <math.h>
 
 using namespace std;
+
+struct floatNum { // so we can return both float number and indicater says its float number or not
+    float num = 0;
+    bool isNum = true;
+};
+
+class Convertor // just project one in other file lol so main file not too messy (i hope)
+{
+public:
+    Convertor() {};
+    floatNum FPLConvertor(string input);
+};
+
+#endif
+
 string LetterCheck(string input, char check, int size)
 {
     int a = input.find(check);
     if (a != -1)
     {
-        cout << "\Decimal number cannot contain " << check << " letter\n";
+        cout << "\nDecimal number cannot contain " << check << " letter\n";
         return "";
     }
     return input;
@@ -87,33 +101,22 @@ float StringToFloat(string input, bool hex)
     return sum;
 }
 
-float FPLConvertor(string input)
+floatNum Convertor::FPLConvertor(string input)
 {
+    floatNum fnum;
     bool negative = false;
     float output = 0;
     int n = input.length();
     int underscore = input.find('_');
     while (underscore != -1) // simply remove _ notation
     {
-        if (underscore == 0 || underscore == input.length() - 1 ||input.at(underscore - 1) == ('.') || 
-            input.at(underscore - 1) == ('e') || input.at(underscore - 1) == ('E') || input.at(underscore - 1) == ('f') || 
-            input.at(underscore - 1) == ('F') || input.at(underscore - 1) == ('d') || input.at(underscore - 1) == ('D') || 
-            input.at(underscore - 1) == ('e') || input.at(underscore - 1) == ('+') || input.at(underscore - 1) == ('-') ||
-            input.at(underscore + 1) == ('.') || input.at(underscore + 1) == ('e') || input.at(underscore - 1) == ('E') ||
-            input.at(underscore + 1) == ('f') || input.at(underscore + 1) == ('F') || input.at(underscore + 1) == ('d') ||
-            input.at(underscore + 1) == ('D') || input.at(underscore + 1) == ('e') || input.at(underscore + 1) == ('+') ||
-            input.at(underscore + 1) == ('-') )
-        {
-            cout << "\nThe '_' is in invalid position\n";
-            return 0;
-        }
         input.erase(underscore, 1);
         underscore = input.find('_');
     }
     if (input.at(0) == '-') // check negative sign
     {
         negative = true;
-        input.erase(0,1); // remove - sign
+        input.erase(0, 1); // remove - sign
     }
     if (input.substr(0, 2).compare("0x") == 0) //check if is hexadecimal
     {
@@ -136,7 +139,10 @@ float FPLConvertor(string input)
         input = LetterCheck(input, 'c', n);
         input = LetterCheck(input, 'C', n);
         if (input.compare("") == 0)
-            return 0;
+        {
+            fnum.isNum = false; // this is not floating number
+            return fnum;
+        }
 
         int e = input.find('e'), E = input.find('E'), index; // check if theres e/E notation in string
         if (e != -1 || E != -1)
@@ -158,8 +164,9 @@ float FPLConvertor(string input)
             E = input.find('E');
             if (e != -1 || E != -1) // if theres more than 1 e/E => nono
             {
-                cout << "\nThere are more than one e notation in the string\n";
-                return 0;
+                cout << "\nThere are more than one e notation in the string\n";               
+                fnum.isNum = false; // this is not floating number
+                return fnum;                
             }
             exponent = input.substr(index, input.size() - index); // store number after e/E in another string
             input.erase(index, input.size() - index); // erase number in exponent part    
@@ -167,7 +174,8 @@ float FPLConvertor(string input)
             if (dot != -1) // if theres a dot in exponential part => nono
             {
                 cout << "\nThere is '.' in the exponential part\n";
-                return 0;
+                fnum.isNum = false; // this is not floating number
+                return fnum;
             }
             power = StringToFloat(exponent, false);
             if (Eneg)
@@ -178,23 +186,6 @@ float FPLConvertor(string input)
     }
     if (negative)
         output *= -1;
-    return output;
-}
-
-int main()
-{
-    string input;
-    float output;
-    while (true)
-    {
-        cout << "\nPlease enter a floating-point literal number (enter q to quit): ";
-        cin >> input; // assume that input is less than or equal 20
-        if (input.compare("q") == 0) // terminate input
-            break;
-        output = FPLConvertor(input);
-        cout << "\nThe decimal value is " << output;
-        cout << endl;
-    }
-    cout << "\nProgram terminated\n";
-    return 0;
+    fnum.num = output;
+    return fnum;
 }
